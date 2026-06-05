@@ -12,7 +12,6 @@ import { useCompass } from './hooks/useCompass';
 import { useNavigation } from './hooks/useNavigation';
 import { useWeather } from './hooks/useWeather';
 import { useAIS } from './hooks/useAIS';
-import { WindLayer } from './components/weather/WindLayer';
 import { VesselPanel } from './components/ui/VesselPanel';
 import type { AISTarget } from './types';
 import './components/ui/ui.css';
@@ -172,6 +171,7 @@ export default function App() {
         activeRoute={nav.activeRoute}
         draftRoutePoints={draftRoutePoints}
         aisTargets={ais.targets}
+        isWindVisible={isWeatherOpen}
         onMapClick={handleMapClick}
         onVesselClick={(v) => setSelectedVessel(v)}
       />
@@ -195,13 +195,6 @@ export default function App() {
           </button>
         </div>
       )}
-
-      {/* Rüzgar Animasyonu Overlay */}
-      <WindLayer 
-        windSpeedKnots={weather.current?.wind.speedKnots ?? null} 
-        windDirectionDeg={weather.current?.wind.directionDeg ?? null} 
-        isActive={isWeatherOpen} 
-      />
 
       {/* Demir Paneli */}
       <AnchorPanel

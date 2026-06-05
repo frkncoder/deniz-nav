@@ -14,6 +14,9 @@ importers:
       maplibre-gl:
         specifier: ^5.24.0
         version: 5.24.0
+      maplibre-wind-gl:
+        specifier: ^0.3.0
+        version: 0.3.0(maplibre-gl@5.24.0)
       pmtiles:
         specifier: ^4.4.1
         version: 4.4.1
@@ -1905,6 +1908,11 @@ packages:
   maplibre-gl@5.24.0:
     resolution: {integrity: sha512-ALyFxgtd5R+65UqZ/++lOqwWcC0SNho9c27fYSyLmG7AfnAul2o46F05aDJGPbFU57wos9dgcIySHs0Xe6ia3A==}
     engines: {node: '>=16.14.0', npm: '>=8.1.0'}
+
+  maplibre-wind-gl@0.3.0:
+    resolution: {integrity: sha512-y1pXMMqO6widZK4M3120hYtI+cKpGQnxsUdMymL0S0JA6oA78LG5PsjgahJ53sQr/UaXgNpi5cjc83hTv85buw==}
+    peerDependencies:
+      maplibre-gl: '>=4.0.0'
 
   math-intrinsics@1.1.0:
     resolution: {integrity: sha512-/IXtbwEk5HTPyEwyKX6hGkYXxM9nbj64B+ilVJnC/R6B0pH5G4V3b0pVbL7DBj4tkhBAppbQUlf6F6Xl9LHu1g==}
@@ -4475,6 +4483,10 @@ snapshots:
       potpack: 2.1.0
       quickselect: 3.0.0
       tinyqueue: 3.0.0
+
+  maplibre-wind-gl@0.3.0(maplibre-gl@5.24.0):
+    dependencies:
+      maplibre-gl: 5.24.0
 
   math-intrinsics@1.1.0: {}
 

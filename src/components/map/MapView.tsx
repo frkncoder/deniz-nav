@@ -3,6 +3,8 @@ import maplibregl from 'maplibre-gl';
 import { Protocol } from 'pmtiles';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import type { GPSPosition, MapViewState } from '../../types';
+// @ts-ignore
+import MaplibreWindGL from 'maplibre-wind-gl';
 import './MapView.css';
 
 // ── Harita Stil Kaynağları ───────────────────────────────────
@@ -48,6 +50,11 @@ function addSeamarkOverlay(map: maplibregl.Map) {
     source: SEAMARK_SOURCE_ID,
     paint: { 'raster-opacity': 0.9 },
   });
+}
+
+function removeSeamarkOverlay(map: maplibregl.Map) {
+  if (map.getLayer(SEAMARK_LAYER_ID)) map.removeLayer(SEAMARK_LAYER_ID);
+  if (map.getSource(SEAMARK_SOURCE_ID)) map.removeSource(SEAMARK_SOURCE_ID);
 }
 
 // ── GPS Nokta Katmanı ─────────────────────────────────────────
@@ -400,6 +407,7 @@ interface MapViewProps {
   activeRoute?: import('../../types').Route | null;
   draftRoutePoints?: import('../../types').LatLng[];
   aisTargets?: import('../../types').AISTarget[];
+  isWindVisible?: boolean;
   onViewStateChange?: (vs: MapViewState) => void;
   onMapClick?: (lat: number, lng: number) => void;
   onVesselClick?: (target: import('../../types').AISTarget) => void;
@@ -415,6 +423,7 @@ export function MapView({
   activeRoute: _activeRoute = null,
   draftRoutePoints: _draftRoutePoints = [],
   aisTargets: _aisTargets = [],
+  isWindVisible = false,
   onViewStateChange,
   onMapClick,
   onVesselClick,
@@ -546,14 +555,42 @@ export function MapView({
   useEffect(() => {
     const map = mapRef.current;
     if (!map || !isLoaded) return;
-
-    if (isSeamapVisible) {
-      if (!map.getSource(SEAMARK_SOURCE_ID)) addSeamarkOverlay(map);
-      map.setLayoutProperty(SEAMARK_LAYER_ID, 'visibility', 'visible');
-    } else if (map.getLayer(SEAMARK_LAYER_ID)) {
-      map.setLayoutProperty(SEAMARK_LAYER_ID, 'visibility', 'none');
-    }
+    if (isSeamapVisible) addSeamarkOverlay(map);
+    else removeSeamarkOverlay(map);
   }, [isSeamapVisible, isLoaded]);
+
+  // WebGL Rüzgâr Katmanı (WindLayer)
+  const windLayerRef = useRef<any>(null);
+  
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !isLoaded) return;
+
+    if (isWindVisible) {
+      if (!windLayerRef.current) {
+        // Yeni maplibre-wind-gl katmanı
+        const wind = new MaplibreWindGL('wind-layer', {
+          data: '/wind.json',
+          particles: 80000,
+          speed: 1.2,
+          opacity: 0.6,
+          // Rüzgar hızı aralığı
+          speedRange: [0, 40]
+        });
+        
+        map.addLayer(wind);
+        windLayerRef.current = wind;
+      } else {
+        if (map.getLayer('wind-layer')) {
+          map.setLayoutProperty('wind-layer', 'visibility', 'visible');
+        }
+      }
+    } else {
+      if (windLayerRef.current && map.getLayer('wind-layer')) {
+        map.setLayoutProperty('wind-layer', 'visibility', 'none');
+      }
+    }
+  }, [isWindVisible, isLoaded]);
 
   // GPS'e git
   const centerOnGPS = useCallback(() => {

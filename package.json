@@ -12,6 +12,7 @@
   "dependencies": {
     "dexie": "^4.4.3",
     "maplibre-gl": "^5.24.0",
+    "maplibre-wind-gl": "^0.3.0",
     "pmtiles": "^4.4.1",
     "react": "^19.2.6",
     "react-dom": "^19.2.6",
