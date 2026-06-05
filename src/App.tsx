@@ -4,35 +4,53 @@ import { StatusBar } from './components/ui/StatusBar';
 import { BottomBar } from './components/ui/BottomBar';
 import { CompassHUD } from './components/ui/CompassHUD';
 import { AnchorPanel } from './components/ui/AnchorPanel';
+import { WeatherPanel } from './components/ui/WeatherPanel';
 import { useGPS } from './hooks/useGPS';
 import { useOffline } from './hooks/useOffline';
 import { usePWA } from './hooks/usePWA';
 import { useCompass } from './hooks/useCompass';
 import { useNavigation } from './hooks/useNavigation';
+import { useWeather } from './hooks/useWeather';
 import './components/ui/ui.css';
 import './App.css';
 
+// Edremit Körfezi — GPS yokken varsayılan konum
+const EDREMIT_LAT = 39.55;
+const EDREMIT_LNG = 26.87;
+
 export default function App() {
-  const gps = useGPS();
+  const gps           = useGPS();
   const { status: connectionStatus } = useOffline();
-  const pwa = usePWA();
-  const compass = useCompass();
-  const nav = useNavigation();
+  const pwa           = usePWA();
+  const compass       = useCompass();
+  const nav           = useNavigation();
+  const weather       = useWeather();
 
   const [isSeamapVisible, setSeamapVisible] = useState(true);
-  const [isRouteMode, setRouteMode] = useState(false);
+  const [isRouteMode,     setRouteMode]     = useState(false);
+  const [isWeatherOpen,   setWeatherOpen]   = useState(false);
 
   // Waypoint'leri başlangıçta yükle
   useEffect(() => {
     nav.loadWaypoints();
-  }, [nav.loadWaypoints]);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Anchor watch — GPS güncellenince kontrol et
   useEffect(() => {
     if (gps.position && nav.anchorPosition) {
       nav.checkAnchorWatch(gps.position);
     }
-  }, [gps.position, nav.anchorPosition]);
+  }, [gps.position]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Hava durumu — panel açılınca veya 1 saatte bir güncelle
+  useEffect(() => {
+    if (!isWeatherOpen) return;
+    const lat = gps.position?.lat ?? EDREMIT_LAT;
+    const lng = gps.position?.lng ?? EDREMIT_LNG;
+    weather.fetch(lat, lng);
+  }, [isWeatherOpen]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // ── Handler'lar ───────────────────────────────────────────────
 
   const handleToggleGPS = useCallback(async () => {
     if (gps.isTracking) {
@@ -43,17 +61,9 @@ export default function App() {
     }
   }, [gps]);
 
-  const handleToggleSeamap = useCallback(() => {
-    setSeamapVisible(v => !v);
-  }, []);
-
-  const handleToggleRoute = useCallback(() => {
-    setRouteMode(v => !v);
-  }, []);
-
   const handleDropAnchor = useCallback((radiusM: number) => {
     if (gps.position) nav.dropAnchor(gps.position, radiusM);
-  }, [gps.position, nav.dropAnchor]);
+  }, [gps.position, nav.dropAnchor]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <main
@@ -93,7 +103,7 @@ export default function App() {
         </div>
       )}
 
-      {/* PWA Kurulum Banner'ı */}
+      {/* PWA Kurulum Banner */}
       {pwa.isInstallable && (
         <div className="pwa-install-banner" role="banner">
           <div className="pwa-install-banner__content">
@@ -118,7 +128,7 @@ export default function App() {
         anchorPosition={nav.anchorPosition}
       />
 
-      {/* Demir Butonu / Anchor Watch Paneli */}
+      {/* Demir Paneli */}
       <AnchorPanel
         anchorPosition={nav.anchorPosition}
         anchorAlarm={nav.anchorAlarm}
@@ -127,14 +137,28 @@ export default function App() {
         onLiftAnchor={nav.liftAnchor}
       />
 
+      {/* Hava Durumu Paneli */}
+      {isWeatherOpen && (
+        <WeatherPanel
+          current={weather.current}
+          forecast={weather.forecast}
+          isLoading={weather.isLoading}
+          error={weather.error}
+          onClose={() => setWeatherOpen(false)}
+          beaufortScale={weather.beaufortScale}
+        />
+      )}
+
       {/* Alt Kontrol Çubuğu */}
       <BottomBar
         onToggleGPS={handleToggleGPS}
-        onToggleSeamap={handleToggleSeamap}
-        onToggleRoute={handleToggleRoute}
+        onToggleSeamap={() => setSeamapVisible(v => !v)}
+        onToggleRoute={() => setRouteMode(v => !v)}
+        onToggleWeather={() => setWeatherOpen(v => !v)}
         isGPSTracking={gps.isTracking}
         isSeamapVisible={isSeamapVisible}
         isRouteMode={isRouteMode}
+        isWeatherOpen={isWeatherOpen}
       />
     </main>
   );

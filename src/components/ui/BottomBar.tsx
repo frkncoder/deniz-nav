@@ -2,18 +2,22 @@ interface BottomBarProps {
   onToggleGPS: () => void;
   onToggleSeamap: () => void;
   onToggleRoute: () => void;
+  onToggleWeather: () => void;
   isGPSTracking: boolean;
   isSeamapVisible: boolean;
   isRouteMode: boolean;
+  isWeatherOpen: boolean;
 }
 
 export function BottomBar({
   onToggleGPS,
   onToggleSeamap,
   onToggleRoute,
+  onToggleWeather,
   isGPSTracking,
   isSeamapVisible,
   isRouteMode,
+  isWeatherOpen,
 }: BottomBarProps) {
   return (
     <div className="bottom-bar" role="toolbar" aria-label="Harita kontrolleri">
@@ -67,18 +71,17 @@ export function BottomBar({
           <span>Rota</span>
         </button>
 
-        {/* Hava (Faz 4) */}
+        {/* Hava */}
         <button
-          id="btn-weather"
-          className="btn bottom-bar__btn bottom-bar__btn--disabled"
-          aria-label="Hava durumu (yakında)"
-          disabled
+          id="btn-toggle-weather"
+          className={`btn bottom-bar__btn ${isWeatherOpen ? 'bottom-bar__btn--active' : ''}`}
+          onClick={onToggleWeather}
+          aria-label="Hava durumu"
+          aria-pressed={isWeatherOpen}
         >
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
                stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M9.59 4.59A2 2 0 1 1 11 8H2" />
-            <path d="M12.59 19.41A2 2 0 1 0 14 16H2" />
-            <path d="M16 12a2 2 0 0 1 0 4H2" />
+            <path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z" />
           </svg>
           <span>Hava</span>
         </button>
