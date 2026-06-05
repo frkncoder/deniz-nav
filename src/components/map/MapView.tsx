@@ -92,6 +92,209 @@ function addGPSLayers(map: maplibregl.Map) {
   } as maplibregl.CircleLayerSpecification);
 }
 
+// ── Navigasyon Katmanları ─────────────────────────────────────
+const NAV_WAYPOINTS_SOURCE = 'nav-waypoints';
+const NAV_ANCHOR_SOURCE = 'nav-anchor';
+const NAV_ROUTE_SOURCE = 'nav-route';
+
+function addNavigationLayers(map: maplibregl.Map) {
+  // Waypoints Source
+  if (!map.getSource(NAV_WAYPOINTS_SOURCE)) {
+    map.addSource(NAV_WAYPOINTS_SOURCE, {
+      type: 'geojson',
+      data: { type: 'FeatureCollection', features: [] }
+    });
+    
+    // Waypoints Layer (Daire ve Metin)
+    map.addLayer({
+      id: 'nav-waypoints-layer',
+      type: 'circle',
+      source: NAV_WAYPOINTS_SOURCE,
+      paint: {
+        'circle-radius': 6,
+        'circle-color': '#f59e0b',
+        'circle-stroke-color': '#ffffff',
+        'circle-stroke-width': 2,
+        'circle-pitch-alignment': 'viewport'
+      }
+    });
+    
+    map.addLayer({
+      id: 'nav-waypoints-text',
+      type: 'symbol',
+      source: NAV_WAYPOINTS_SOURCE,
+      layout: {
+        'text-field': ['get', 'name'],
+        'text-font': ['Open Sans Bold', 'Arial Unicode MS Bold'],
+        'text-size': 12,
+        'text-offset': [0, 1.2],
+        'text-anchor': 'top',
+        'text-pitch-alignment': 'viewport'
+      },
+      paint: {
+        'text-color': '#ffffff',
+        'text-halo-color': '#000000',
+        'text-halo-width': 1.5
+      }
+    });
+  }
+
+  // Anchor Source
+  if (!map.getSource(NAV_ANCHOR_SOURCE)) {
+    map.addSource(NAV_ANCHOR_SOURCE, {
+      type: 'geojson',
+      data: { type: 'FeatureCollection', features: [] }
+    });
+    
+    // Anchor Merkez Noktası
+    map.addLayer({
+      id: 'nav-anchor-center',
+      type: 'circle',
+      source: NAV_ANCHOR_SOURCE,
+      paint: {
+        'circle-radius': 8,
+        'circle-color': '#ef4444',
+        'circle-stroke-color': '#ffffff',
+        'circle-stroke-width': 2,
+        'circle-pitch-alignment': 'viewport'
+      }
+    });
+    
+    // Anchor Yarıçapı (örnek olarak sabit bir alan çizebiliriz veya gerçek metreyi yansıtabiliriz, şimdilik görsel)
+    map.addLayer({
+      id: 'nav-anchor-radius',
+      type: 'circle',
+      source: NAV_ANCHOR_SOURCE,
+      paint: {
+        'circle-radius': 40,
+        'circle-color': 'rgba(239, 68, 68, 0.15)',
+        'circle-stroke-color': '#ef4444',
+        'circle-stroke-width': 1,
+        'circle-pitch-alignment': 'map'
+      }
+    });
+  }
+
+  // Route Source (Aktif Rota ve Çizim Aşamasındaki Rota)
+  if (!map.getSource(NAV_ROUTE_SOURCE)) {
+    map.addSource(NAV_ROUTE_SOURCE, {
+      type: 'geojson',
+      data: { type: 'FeatureCollection', features: [] }
+    });
+    
+    map.addLayer({
+      id: 'nav-route-line',
+      type: 'line',
+      source: NAV_ROUTE_SOURCE,
+      layout: {
+        'line-join': 'round',
+        'line-cap': 'round'
+      },
+      paint: {
+        'line-color': ['coalesce', ['get', 'color'], '#0ea5e9'],
+        'line-width': 4,
+        'line-dasharray': ['case', ['boolean', ['get', 'isDraft'], false], ['literal', [2, 2]], ['literal', [1]]]
+      }
+    });
+    
+    // Rota üzerindeki noktalar
+    map.addLayer({
+      id: 'nav-route-points',
+      type: 'circle',
+      source: NAV_ROUTE_SOURCE,
+      paint: {
+        'circle-radius': 4,
+        'circle-color': '#ffffff',
+        'circle-stroke-color': ['coalesce', ['get', 'color'], '#0ea5e9'],
+        'circle-stroke-width': 2,
+        'circle-pitch-alignment': 'viewport'
+      }
+    });
+  }
+}
+
+function updateNavigationData(
+  map: maplibregl.Map, 
+  waypoints: import('../../types').Waypoint[], 
+  anchorPos: GPSPosition | null, 
+  activeRoute: import('../../types').Route | null,
+  draftRoutePoints: import('../../types').LatLng[]
+) {
+  // Waypoints
+  const wpSource = map.getSource(NAV_WAYPOINTS_SOURCE) as maplibregl.GeoJSONSource | undefined;
+  if (wpSource) {
+    wpSource.setData({
+      type: 'FeatureCollection',
+      features: waypoints.map(wp => ({
+        type: 'Feature',
+        geometry: { type: 'Point', coordinates: [wp.lng, wp.lat] },
+        properties: { name: wp.name, type: wp.type }
+      }))
+    });
+  }
+
+  // Anchor
+  const anchorSource = map.getSource(NAV_ANCHOR_SOURCE) as maplibregl.GeoJSONSource | undefined;
+  if (anchorSource) {
+    anchorSource.setData({
+      type: 'FeatureCollection',
+      features: anchorPos ? [{
+        type: 'Feature',
+        geometry: { type: 'Point', coordinates: [anchorPos.lng, anchorPos.lat] },
+        properties: {}
+      }] : []
+    });
+  }
+
+  // Routes
+  const routeSource = map.getSource(NAV_ROUTE_SOURCE) as maplibregl.GeoJSONSource | undefined;
+  if (routeSource) {
+    const routeFeatures: GeoJSON.Feature<GeoJSON.Geometry, GeoJSON.GeoJsonProperties>[] = [];
+    
+    // Aktif Rota (Kayıtlı)
+    if (activeRoute && activeRoute.waypoints.length > 0) {
+      const coords = activeRoute.waypoints.map(wp => [wp.lng, wp.lat]);
+      routeFeatures.push({
+        type: 'Feature',
+        geometry: { type: 'LineString', coordinates: coords },
+        properties: { color: activeRoute.color || '#0ea5e9', isDraft: false }
+      });
+      // Rota Noktaları
+      activeRoute.waypoints.forEach(wp => {
+        routeFeatures.push({
+          type: 'Feature',
+          geometry: { type: 'Point', coordinates: [wp.lng, wp.lat] },
+          properties: { color: activeRoute.color || '#0ea5e9' }
+        });
+      });
+    }
+
+    // Taslak Rota (Çizim aşamasında)
+    if (draftRoutePoints && draftRoutePoints.length > 0) {
+      const draftCoords = draftRoutePoints.map(pt => [pt.lng, pt.lat]);
+      if (draftCoords.length > 1) {
+        routeFeatures.push({
+          type: 'Feature',
+          geometry: { type: 'LineString', coordinates: draftCoords },
+          properties: { color: '#f59e0b', isDraft: true }
+        });
+      }
+      draftRoutePoints.forEach(pt => {
+        routeFeatures.push({
+          type: 'Feature',
+          geometry: { type: 'Point', coordinates: [pt.lng, pt.lat] },
+          properties: { color: '#f59e0b' }
+        });
+      });
+    }
+
+    routeSource.setData({
+      type: 'FeatureCollection',
+      features: routeFeatures
+    });
+  }
+}
+
 function updateGPSPosition(map: maplibregl.Map, pos: GPSPosition) {
   const source = map.getSource(GPS_SOURCE_ID) as maplibregl.GeoJSONSource | undefined;
   if (!source) return;
@@ -113,7 +316,10 @@ interface MapViewProps {
   isRouteMode?: boolean;
   waypoints?: import('../../types').Waypoint[];
   anchorPosition?: GPSPosition | null;
+  activeRoute?: import('../../types').Route | null;
+  draftRoutePoints?: import('../../types').LatLng[];
   onViewStateChange?: (vs: MapViewState) => void;
+  onMapClick?: (lat: number, lng: number) => void;
 }
 
 // ── Ana Bileşen ───────────────────────────────────────────
@@ -123,7 +329,10 @@ export function MapView({
   isRouteMode: _isRouteMode = false,
   waypoints: _waypoints = [],
   anchorPosition: _anchorPosition = null,
+  activeRoute: _activeRoute = null,
+  draftRoutePoints: _draftRoutePoints = [],
   onViewStateChange,
+  onMapClick,
 }: MapViewProps) {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
@@ -163,8 +372,15 @@ export function MapView({
 
     map.on('load', () => {
       addGPSLayers(map);
+      addNavigationLayers(map);
       if (isSeamapVisible) addSeamarkOverlay(map);
       setIsLoaded(true);
+    });
+
+    map.on('click', (e) => {
+      if (onMapClick) {
+        onMapClick(e.lngLat.lat, e.lngLat.lng);
+      }
     });
 
     map.on('move', () => {
@@ -204,6 +420,13 @@ export function MapView({
       });
     }
   }, [gpsPosition, isLoaded, followGPS]);
+
+  // Navigasyon verisi güncellemesi
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !isLoaded) return;
+    updateNavigationData(map, _waypoints, _anchorPosition, _activeRoute, _draftRoutePoints);
+  }, [_waypoints, _anchorPosition, _activeRoute, _draftRoutePoints, isLoaded]);
 
   // OpenSeaMap katmanı toggle
   useEffect(() => {

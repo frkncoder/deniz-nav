@@ -29,6 +29,7 @@ export default function App() {
   const [isSeamapVisible, setSeamapVisible] = useState(true);
   const [isRouteMode,     setRouteMode]     = useState(false);
   const [isWeatherOpen,   setWeatherOpen]   = useState(false);
+  const [draftRoutePoints, setDraftRoutePoints] = useState<import('./types').LatLng[]>([]);
 
   // Waypoint'leri başlangıçta yükle
   useEffect(() => {
@@ -64,6 +65,42 @@ export default function App() {
   const handleDropAnchor = useCallback((radiusM: number) => {
     if (gps.position) nav.dropAnchor(gps.position, radiusM);
   }, [gps.position, nav.dropAnchor]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const handleMapClick = useCallback((lat: number, lng: number) => {
+    if (isRouteMode) {
+      setDraftRoutePoints(prev => [...prev, { lat, lng }]);
+    } else {
+      // Normal modda tıklama işlemleri (örneğin waypoint seçimi vs.) eklenebilir
+    }
+  }, [isRouteMode]);
+
+  const handleSaveRoute = useCallback(async () => {
+    if (draftRoutePoints.length < 2) return;
+    
+    // Geçici waypoint'ler oluştur (rota noktaları olarak)
+    const newWaypoints = draftRoutePoints.map((pt, i) => ({
+      id: `temp_${Date.now()}_${i}`,
+      name: `R Noktası ${i+1}`,
+      lat: pt.lat,
+      lng: pt.lng,
+      type: 'waypoint' as const,
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+      synced: false
+    }));
+    
+    // TODO: Gerçek waypoint olarak eklemek istersen db'ye kaydet. 
+    // Şimdilik route içine gömülü waypoint nesneleri olarak geçiyoruz.
+    await nav.createNewRoute(`Rota ${new Date().toLocaleDateString()}`, newWaypoints);
+    
+    setDraftRoutePoints([]);
+    setRouteMode(false);
+  }, [draftRoutePoints, nav]);
+
+  const handleCancelRoute = useCallback(() => {
+    setDraftRoutePoints([]);
+    setRouteMode(false);
+  }, []);
 
   return (
     <main
@@ -126,7 +163,30 @@ export default function App() {
         isRouteMode={isRouteMode}
         waypoints={nav.waypoints}
         anchorPosition={nav.anchorPosition}
+        activeRoute={nav.activeRoute}
+        draftRoutePoints={draftRoutePoints}
+        onMapClick={handleMapClick}
       />
+
+      {/* Rota Çizim Kontrolleri */}
+      {isRouteMode && (
+        <div className="route-draw-panel panel-glass" style={{
+          position: 'absolute', top: 120, left: '50%', transform: 'translateX(-50%)', zIndex: 10,
+          display: 'flex', gap: '8px', padding: '8px 16px', borderRadius: '24px', alignItems: 'center'
+        }}>
+          <span style={{ fontSize: 13, color: 'var(--clr-text-muted)' }}>
+            {draftRoutePoints.length} Nokta
+          </span>
+          <button className="btn btn-primary" style={{ minHeight: '32px', fontSize: 12, padding: '0 12px' }} 
+                  onClick={handleSaveRoute} disabled={draftRoutePoints.length < 2}>
+            Kaydet
+          </button>
+          <button className="btn" style={{ minHeight: '32px', fontSize: 12, padding: '0 12px', background: 'rgba(239,68,68,0.2)', color: '#fca5a5', border: 'none' }} 
+                  onClick={handleCancelRoute}>
+            İptal
+          </button>
+        </div>
+      )}
 
       {/* Demir Paneli */}
       <AnchorPanel
