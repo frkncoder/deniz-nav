@@ -4,7 +4,7 @@ import { StatusBar } from './components/ui/StatusBar';
 import { BottomBar } from './components/ui/BottomBar';
 import { CompassHUD } from './components/ui/CompassHUD';
 import { AnchorPanel } from './components/ui/AnchorPanel';
-import { WeatherPanel } from './components/ui/WeatherPanel';
+import { MeteogramPanel } from './components/ui/MeteogramPanel';
 import { useGPS } from './hooks/useGPS';
 import { useOffline } from './hooks/useOffline';
 import { usePWA } from './hooks/usePWA';
@@ -211,15 +211,11 @@ export default function App() {
         onClose={() => setSelectedVessel(null)}
       />
 
-      {/* Hava Durumu Paneli */}
+      {/* Meteogram Paneli */}
       {isWeatherOpen && (
-        <WeatherPanel
-          current={weather.current}
-          forecast={weather.forecast}
-          isLoading={weather.isLoading}
-          error={weather.error}
+        <MeteogramPanel
+          weather={weather}
           onClose={() => setWeatherOpen(false)}
-          beaufortScale={weather.beaufortScale}
         />
       )}
 

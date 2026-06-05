@@ -34,7 +34,8 @@ export interface WeatherForecast {
     winddir: number[];        // derece
     windgusts: number[];      // km/h
     temp: number[];           // °C
-    waveHeight: number[];     // m (marine)
+    precipitation: number[];  // mm
+    weatherCode: number[];    // WMO kod
   };
 }
 
@@ -125,13 +126,13 @@ export function useWeather() {
         ].join(','),
         hourly: [
           'temperature_2m',
+          'precipitation',
+          'weather_code',
           'wind_speed_10m',
           'wind_direction_10m',
           'wind_gusts_10m',
-          'wave_height',
-          'sea_surface_temperature',
         ].join(','),
-        forecast_days: '2',
+        forecast_days: '5',
         wind_speed_unit: 'kmh',
         timezone: 'Europe/Istanbul',
       });
@@ -221,7 +222,8 @@ function parseForecast(data: any): WeatherForecast {
       winddir:    h.wind_direction_10m ?? [],
       windgusts:  h.wind_gusts_10m ?? [],
       temp:       h.temperature_2m ?? [],
-      waveHeight: h.wave_height ?? [],
+      precipitation: h.precipitation ?? [],
+      weatherCode: h.weather_code ?? [],
     },
   };
 }

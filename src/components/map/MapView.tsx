@@ -5,6 +5,7 @@ import 'maplibre-gl/dist/maplibre-gl.css';
 import type { GPSPosition, MapViewState } from '../../types';
 // @ts-ignore
 import MaplibreWindGL from 'maplibre-wind-gl';
+import { generateWindHeatmap } from '../../utils/windHeatmap';
 import './MapView.css';
 
 // ── Harita Stil Kaynağları ───────────────────────────────────
@@ -570,24 +571,62 @@ export function MapView({
 
     if (isWindVisible) {
       if (!windLayerRef.current) {
-        // Yeni maplibre-wind-gl katmanı
-        const wind = new MaplibreWindGL('wind-layer', {
-          data: '/wind.json',
-          particles: 300000, // Zoom yapıldığında görünmesi için ciddi oranda artırıldı
-          speed: 3.0, // Daha hızlı akış
-          opacity: 1.0, // Daha parlak
-          maxAge: 30, // Daha uzun kuyruklar
-          color: [0.0, 1.0, 1.0] // Sabit parlak mavi (Görünürlük testi için)
-        });
-        
-        map.addLayer(wind);
-        windLayerRef.current = wind;
+        // Önce Heatmap'i oluştur ve ekle
+        fetch('/wind.json')
+          .then(res => res.json())
+          .then(async data => {
+            const heatmapUrl = await generateWindHeatmap(data);
+            
+            if (!map.getSource('wind-heatmap-source')) {
+              map.addSource('wind-heatmap-source', {
+                type: 'image',
+                url: heatmapUrl,
+                coordinates: [
+                  [-180, 85.051129],
+                  [180, 85.051129],
+                  [180, -85.051129],
+                  [-180, -85.051129]
+                ]
+              });
+              
+              map.addLayer({
+                id: 'wind-heatmap-layer',
+                type: 'raster',
+                source: 'wind-heatmap-source',
+                paint: {
+                  'raster-opacity': 0.8,
+                  'raster-fade-duration': 0
+                }
+              }, 'gps-dot-outer'); // GPS noktasının altına ekle (Eğer varsa)
+            }
+
+            // Yeni maplibre-wind-gl katmanı (Partiküller)
+            const wind = new MaplibreWindGL('wind-layer', {
+              data: '/wind.json', // veya direkt data objesi
+              particles: 150000, 
+              speed: 2.5, 
+              opacity: 0.9, 
+              maxAge: 30, 
+              color: [1.0, 1.0, 1.0] // Windy gibi beyaz/gri akan çizgiler
+            });
+            
+            if (!map.getLayer('wind-layer')) {
+              map.addLayer(wind);
+            }
+            windLayerRef.current = wind;
+          });
       } else {
+        if (map.getLayer('wind-heatmap-layer')) {
+          map.setLayoutProperty('wind-heatmap-layer', 'visibility', 'visible');
+        }
         if (map.getLayer('wind-layer')) {
           map.setLayoutProperty('wind-layer', 'visibility', 'visible');
         }
       }
     } else {
+      if (map.getLayer('wind-heatmap-layer')) {
+        map.setLayoutProperty('wind-heatmap-layer', 'visibility', 'none');
+      }
       if (windLayerRef.current && map.getLayer('wind-layer')) {
         map.setLayoutProperty('wind-layer', 'visibility', 'none');
       }
