@@ -1,5 +1,5 @@
 /* ============================================================
-   UI Bileşen Stilleri — StatusBar, BottomBar
+   UI Bileşen Stilleri — StatusBar, BottomBar, CompassHUD, AnchorPanel
    ============================================================ */
 
 /* ── StatusBar ───────────────────────────────────────────────── */
@@ -103,4 +103,159 @@
 .bottom-bar__btn:disabled {
   opacity: 0.3;
   cursor: not-allowed;
+}
+
+/* ── CompassHUD ──────────────────────────────────────────────── */
+.compass-hud {
+  position: absolute;
+  top: var(--space-4);
+  right: var(--space-4);
+  z-index: var(--z-hud);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  border-radius: var(--radius-lg);
+  animation: fade-in var(--transition-normal) both;
+  min-width: 96px;
+}
+
+.compass-hud__dial {
+  display: block;
+}
+
+.compass-hud__info {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+}
+
+.compass-hud__deg {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--clr-text);
+}
+
+.compass-hud__dir {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--clr-primary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.compass-hud__speed {
+  display: flex;
+  align-items: baseline;
+  gap: 2px;
+  border-top: 1px solid var(--clr-border);
+  padding-top: var(--space-2);
+  width: 100%;
+  justify-content: center;
+}
+
+.compass-hud__speed-val {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--clr-accent);
+}
+
+.compass-hud__speed-unit {
+  font-size: 11px;
+  color: var(--clr-text-faint);
+}
+
+/* ── AnchorPanel ─────────────────────────────────────────────── */
+.anchor-btn {
+  position: absolute;
+  bottom: calc(80px + var(--space-3) + env(safe-area-inset-bottom, 0px));
+  left: var(--space-4);
+  z-index: var(--z-hud);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-4);
+  height: 40px;
+  font-size: 13px;
+  font-weight: 600;
+  border-radius: var(--radius-full) !important;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  transition: all var(--transition-fast);
+}
+
+.anchor-btn--drop {
+  background: rgba(17, 24, 39, 0.88) !important;
+  border: 1px solid var(--clr-border) !important;
+  color: var(--clr-text-muted);
+  box-shadow: var(--shadow-md);
+}
+
+.anchor-btn--drop:hover:not(:disabled) {
+  border-color: var(--clr-accent) !important;
+  color: var(--clr-accent);
+}
+
+.anchor-btn--drop:disabled {
+  opacity: 0.4;
+}
+
+.anchor-panel {
+  position: absolute;
+  bottom: calc(80px + var(--space-3) + env(safe-area-inset-bottom, 0px));
+  left: var(--space-4);
+  z-index: var(--z-hud);
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-full);
+  transition: all var(--transition-fast);
+}
+
+.anchor-panel--alarm {
+  border-color: var(--clr-danger) !important;
+  background: rgba(239, 68, 68, 0.15) !important;
+  animation: alarm-pulse 0.8s ease-in-out infinite;
+}
+
+@keyframes alarm-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(239,68,68,0); }
+  50%       { box-shadow: 0 0 0 8px rgba(239,68,68,0.3); }
+}
+
+.anchor-alarm {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--clr-danger);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.anchor-panel__status {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--clr-text-muted);
+}
+
+.anchor-panel__label {
+  font-weight: 500;
+}
+
+.anchor-btn--lift {
+  background: rgba(239,68,68,0.15) !important;
+  border: 1px solid rgba(239,68,68,0.4) !important;
+  color: #fca5a5;
+  font-size: 12px;
+  height: 30px;
+  padding: 0 var(--space-3);
+  border-radius: var(--radius-full) !important;
+  min-width: auto;
+  min-height: auto;
 }

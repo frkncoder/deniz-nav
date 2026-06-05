@@ -1,25 +1,25 @@
 interface BottomBarProps {
   onToggleGPS: () => void;
   onToggleSeamap: () => void;
+  onToggleRoute: () => void;
   isGPSTracking: boolean;
   isSeamapVisible: boolean;
+  isRouteMode: boolean;
 }
 
-/**
- * BottomBar — Tek elle kullanım için alt kısımda sabit kontrol çubuğu.
- * GPS başlat/durdur ve katman toggle butonları içerir.
- */
 export function BottomBar({
   onToggleGPS,
   onToggleSeamap,
+  onToggleRoute,
   isGPSTracking,
   isSeamapVisible,
+  isRouteMode,
 }: BottomBarProps) {
   return (
     <div className="bottom-bar" role="toolbar" aria-label="Harita kontrolleri">
       <div className="bottom-bar__inner">
 
-        {/* GPS Butonu */}
+        {/* GPS */}
         <button
           id="btn-toggle-gps"
           className={`btn bottom-bar__btn ${isGPSTracking ? 'bottom-bar__btn--active' : ''}`}
@@ -27,17 +27,15 @@ export function BottomBar({
           aria-label={isGPSTracking ? 'GPS takibini durdur' : 'GPS takibini başlat'}
           aria-pressed={isGPSTracking}
         >
-          {/* GPS / Konum ikonu */}
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
                stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <path d="M12 2L12 6M12 18L12 22M2 12L6 12M18 12L22 12" />
             <circle cx="12" cy="12" r="4" />
-            {isGPSTracking && <circle cx="12" cy="12" r="8" strokeOpacity="0.3" />}
           </svg>
           <span>{isGPSTracking ? 'GPS Açık' : 'GPS'}</span>
         </button>
 
-        {/* Deniz Kartı Butonu */}
+        {/* Deniz Kartı */}
         <button
           id="btn-toggle-seamap"
           className={`btn bottom-bar__btn ${isSeamapVisible ? 'bottom-bar__btn--active' : ''}`}
@@ -45,7 +43,6 @@ export function BottomBar({
           aria-label={isSeamapVisible ? 'Deniz kartını gizle' : 'Deniz kartını göster'}
           aria-pressed={isSeamapVisible}
         >
-          {/* Çapa ikonu */}
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
                stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <circle cx="12" cy="5" r="2" />
@@ -55,14 +52,14 @@ export function BottomBar({
           <span>Deniz Kartı</span>
         </button>
 
-        {/* Rota Butonu (Faz 3'te aktif olacak) */}
+        {/* Rota */}
         <button
-          id="btn-route"
-          className="btn bottom-bar__btn bottom-bar__btn--disabled"
-          aria-label="Rota oluştur (yakında)"
-          disabled
+          id="btn-toggle-route"
+          className={`btn bottom-bar__btn ${isRouteMode ? 'bottom-bar__btn--active' : ''}`}
+          onClick={onToggleRoute}
+          aria-label="Rota modu"
+          aria-pressed={isRouteMode}
         >
-          {/* Rota ikonu */}
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
                stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
@@ -70,14 +67,13 @@ export function BottomBar({
           <span>Rota</span>
         </button>
 
-        {/* Hava Durumu Butonu (Faz 4'te aktif olacak) */}
+        {/* Hava (Faz 4) */}
         <button
           id="btn-weather"
           className="btn bottom-bar__btn bottom-bar__btn--disabled"
           aria-label="Hava durumu (yakında)"
           disabled
         >
-          {/* Rüzgâr ikonu */}
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
                stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <path d="M9.59 4.59A2 2 0 1 1 11 8H2" />

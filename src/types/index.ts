@@ -32,7 +32,7 @@ export interface Waypoint {
   name: string;
   lat: number;
   lng: number;
-  type: 'waypoint' | 'anchor' | 'poi';
+  type: 'waypoint' | 'anchor' | 'poi' | 'custom';
   notes?: string;
   createdAt: number;
   updatedAt: number;
@@ -44,6 +44,7 @@ export interface Route {
   id: string;
   name: string;
   waypoints: Waypoint[];
+  color?: string;
   totalDistance?: number;  // deniz mili
   createdAt: number;
   updatedAt: number;

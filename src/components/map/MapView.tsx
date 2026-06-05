@@ -106,17 +106,23 @@ function updateGPSPosition(map: maplibregl.Map, pos: GPSPosition) {
   });
 }
 
-// ── Bileşen Props ─────────────────────────────────────────────
+// ── Bileşen Props ───────────────────────────────────────────
 interface MapViewProps {
   gpsPosition: GPSPosition | null;
   isSeamapVisible?: boolean;
+  isRouteMode?: boolean;
+  waypoints?: import('../../types').Waypoint[];
+  anchorPosition?: GPSPosition | null;
   onViewStateChange?: (vs: MapViewState) => void;
 }
 
-// ── Ana Bileşen ───────────────────────────────────────────────
+// ── Ana Bileşen ───────────────────────────────────────────
 export function MapView({
   gpsPosition,
   isSeamapVisible = true,
+  isRouteMode: _isRouteMode = false,
+  waypoints: _waypoints = [],
+  anchorPosition: _anchorPosition = null,
   onViewStateChange,
 }: MapViewProps) {
   const mapContainerRef = useRef<HTMLDivElement>(null);
