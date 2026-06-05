@@ -1,111 +1,297 @@
+/* ============================================================
+   DENİZ-NAV — Global Stiller & Design Token'ları
+   Mobile-first, karanlık tema, yüksek kontrast
+   ============================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+/* ── Design Tokens ───────────────────────────────────────── */
 :root {
-  --text: #6b6375;
-  --text-h: #08060d;
-  --bg: #fff;
-  --border: #e5e4e7;
-  --code-bg: #f4f3ec;
-  --accent: #aa3bff;
-  --accent-bg: rgba(170, 59, 255, 0.1);
-  --accent-border: rgba(170, 59, 255, 0.5);
-  --social-bg: rgba(244, 243, 236, 0.5);
-  --shadow:
-    rgba(0, 0, 0, 0.1) 0 10px 15px -3px, rgba(0, 0, 0, 0.05) 0 4px 6px -2px;
+  /* Renk Paleti — Deniz teması */
+  --clr-bg:           #0a0f1a;      /* Gece denizi siyahı */
+  --clr-surface:      #111827;      /* Kart/panel arka planı */
+  --clr-surface-2:    #1a2336;      /* İkincil yüzey */
+  --clr-border:       #1e2d45;      /* Kenarlık */
+  --clr-border-soft:  rgba(30,45,69,0.6);
 
-  --sans: system-ui, 'Segoe UI', Roboto, sans-serif;
-  --heading: system-ui, 'Segoe UI', Roboto, sans-serif;
-  --mono: ui-monospace, Consolas, monospace;
+  /* Marka renkleri */
+  --clr-primary:      #0ea5e9;      /* Deniz mavisi */
+  --clr-primary-dim:  #0284c7;
+  --clr-primary-glow: rgba(14,165,233,0.2);
+  --clr-accent:       #06b6d4;      /* Cyan — GPS noktası, aktif */
+  --clr-success:      #10b981;      /* Yeşil — online, OK */
+  --clr-warning:      #f59e0b;      /* Sarı — uyarı */
+  --clr-danger:       #ef4444;      /* Kırmızı — alarm */
 
-  font: 18px/145% var(--sans);
-  letter-spacing: 0.18px;
-  color-scheme: light dark;
-  color: var(--text);
-  background: var(--bg);
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  /* Metin */
+  --clr-text:         #f1f5f9;      /* Birincil metin */
+  --clr-text-muted:   #94a3b8;      /* İkincil metin */
+  --clr-text-faint:   #475569;      /* Soluk metin */
 
-  @media (max-width: 1024px) {
-    font-size: 16px;
-  }
+  /* Tipografi */
+  --font-sans:        'Inter', system-ui, -apple-system, sans-serif;
+  --font-mono:        'JetBrains Mono', 'Courier New', monospace;
+
+  /* Boşluk */
+  --space-1:  4px;
+  --space-2:  8px;
+  --space-3:  12px;
+  --space-4:  16px;
+  --space-5:  20px;
+  --space-6:  24px;
+  --space-8:  32px;
+  --space-10: 40px;
+
+  /* Köşe yarıçapı */
+  --radius-sm:  6px;
+  --radius-md:  10px;
+  --radius-lg:  16px;
+  --radius-xl:  24px;
+  --radius-full: 9999px;
+
+  /* Minimum dokunma hedefi (mobile) */
+  --touch-target: 48px;
+
+  /* Gölgeler */
+  --shadow-sm:  0 1px 3px rgba(0,0,0,0.4);
+  --shadow-md:  0 4px 16px rgba(0,0,0,0.5);
+  --shadow-glow: 0 0 20px var(--clr-primary-glow);
+
+  /* Geçişler */
+  --transition-fast:   150ms ease;
+  --transition-normal: 250ms ease;
+  --transition-slow:   400ms ease;
+
+  /* Z-index katmanları */
+  --z-map:      0;
+  --z-overlay:  10;
+  --z-hud:      20;
+  --z-panel:    30;
+  --z-modal:    40;
+  --z-toast:    50;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --text: #9ca3af;
-    --text-h: #f3f4f6;
-    --bg: #16171d;
-    --border: #2e303a;
-    --code-bg: #1f2028;
-    --accent: #c084fc;
-    --accent-bg: rgba(192, 132, 252, 0.15);
-    --accent-border: rgba(192, 132, 252, 0.5);
-    --social-bg: rgba(47, 48, 58, 0.5);
-    --shadow:
-      rgba(0, 0, 0, 0.4) 0 10px 15px -3px, rgba(0, 0, 0, 0.25) 0 4px 6px -2px;
-  }
-
-  #social .button-icon {
-    filter: invert(1) brightness(2);
-  }
-}
-
-#root {
-  width: 1126px;
-  max-width: 100%;
-  margin: 0 auto;
-  text-align: center;
-  border-inline: 1px solid var(--border);
-  min-height: 100svh;
-  display: flex;
-  flex-direction: column;
+/* ── Reset & Base ─────────────────────────────────────────── */
+*, *::before, *::after {
   box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  height: 100%;
+  /* Mobil scroll davranışı */
+  -webkit-text-size-adjust: 100%;
+  touch-action: manipulation;
 }
 
 body {
-  margin: 0;
+  height: 100%;
+  background-color: var(--clr-bg);
+  color: var(--clr-text);
+  font-family: var(--font-sans);
+  font-size: 16px;
+  line-height: 1.5;
+  /* Seçim yok — harita UX için */
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior: none;
 }
 
-h1,
-h2 {
-  font-family: var(--heading);
-  font-weight: 500;
-  color: var(--text-h);
+#root {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
-h1 {
-  font-size: 56px;
-  letter-spacing: -1.68px;
-  margin: 32px 0;
-  @media (max-width: 1024px) {
-    font-size: 36px;
-    margin: 20px 0;
-  }
-}
-h2 {
-  font-size: 24px;
-  line-height: 118%;
-  letter-spacing: -0.24px;
-  margin: 0 0 8px;
-  @media (max-width: 1024px) {
-    font-size: 20px;
-  }
-}
-p {
-  margin: 0;
+/* ── Tipografi ────────────────────────────────────────────── */
+h1, h2, h3, h4 {
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
 }
 
-code,
-.counter {
-  font-family: var(--mono);
+.mono {
+  font-family: var(--font-mono);
+  font-size: 0.9em;
+  letter-spacing: 0.02em;
+}
+
+/* ── Yardımcı Sınıflar ───────────────────────────────────── */
+.visually-hidden {
+  position: absolute;
+  width: 1px; height: 1px;
+  overflow: hidden;
+  clip: rect(0,0,0,0);
+  white-space: nowrap;
+}
+
+/* ── Harita Konteyner ────────────────────────────────────── */
+.map-container {
+  position: relative;
+  width: 100%;
+  flex: 1;
+  overflow: hidden;
+  background: var(--clr-bg);
+}
+
+/* MapLibre canvas tam ekran */
+.map-container .maplibregl-canvas {
+  outline: none;
+}
+
+/* MapLibre attribution küçük ve şeffaf */
+.maplibregl-ctrl-attrib {
+  background: rgba(10,15,26,0.7) !important;
+  font-size: 10px !important;
+  color: var(--clr-text-faint) !important;
+}
+
+.maplibregl-ctrl-attrib a {
+  color: var(--clr-primary) !important;
+}
+
+/* MapLibre logo gizle (lisans uyumu için attribution yeterli) */
+.maplibregl-ctrl-logo {
+  display: none !important;
+}
+
+/* ── HUD Elemanları ──────────────────────────────────────── */
+.hud-overlay {
+  position: absolute;
+  z-index: var(--z-hud);
+  pointer-events: none;
+}
+
+.hud-overlay > * {
+  pointer-events: auto;
+}
+
+/* ── Panel / Card ────────────────────────────────────────── */
+.panel {
+  background: var(--clr-surface);
+  border: 1px solid var(--clr-border);
+  border-radius: var(--radius-lg);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.panel-glass {
+  background: rgba(17,24,39,0.85);
+  border: 1px solid var(--clr-border-soft);
+  border-radius: var(--radius-lg);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+/* ── Butonlar ─────────────────────────────────────────────── */
+.btn {
   display: inline-flex;
-  border-radius: 4px;
-  color: var(--text-h);
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  min-width: var(--touch-target);
+  min-height: var(--touch-target);
+  padding: var(--space-3) var(--space-4);
+  border: none;
+  border-radius: var(--radius-md);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
 }
 
-code {
-  font-size: 15px;
-  line-height: 135%;
-  padding: 4px 8px;
-  background: var(--code-bg);
+.btn-icon {
+  width: var(--touch-target);
+  height: var(--touch-target);
+  padding: 0;
+  border-radius: var(--radius-md);
+}
+
+.btn-primary {
+  background: var(--clr-primary);
+  color: white;
+  box-shadow: var(--shadow-sm);
+}
+
+.btn-primary:hover, .btn-primary:focus-visible {
+  background: var(--clr-primary-dim);
+  box-shadow: var(--shadow-glow);
+  transform: translateY(-1px);
+}
+
+.btn-primary:active {
+  transform: translateY(0);
+}
+
+.btn-ghost {
+  background: var(--clr-surface);
+  color: var(--clr-text-muted);
+  border: 1px solid var(--clr-border);
+}
+
+.btn-ghost:hover, .btn-ghost:focus-visible {
+  background: var(--clr-surface-2);
+  color: var(--clr-text);
+  border-color: var(--clr-primary);
+}
+
+.btn-danger {
+  background: var(--clr-danger);
+  color: white;
+}
+
+/* ── Alt Bar (Bottom Bar) ────────────────────────────────── */
+.bottom-bar {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  z-index: var(--z-panel);
+  padding: var(--space-3) var(--space-4);
+  /* Safe area — iPhone notch / home bar */
+  padding-bottom: max(var(--space-3), env(safe-area-inset-bottom));
+  background: rgba(10,15,26,0.92);
+  border-top: 1px solid var(--clr-border);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+
+/* ── Durum Göstergeleri ──────────────────────────────────── */
+.status-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.status-dot--online  { background: var(--clr-success); box-shadow: 0 0 6px var(--clr-success); }
+.status-dot--offline { background: var(--clr-warning); }
+.status-dot--gps     { background: var(--clr-accent);  box-shadow: 0 0 6px var(--clr-accent); }
+
+/* ── Animasyonlar ─────────────────────────────────────────── */
+@keyframes pulse-glow {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%       { opacity: 0.7; transform: scale(1.2); }
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.animate-pulse-glow { animation: pulse-glow 2s ease-in-out infinite; }
+.animate-spin       { animation: spin 1s linear infinite; }
+.animate-fade-in    { animation: fade-in var(--transition-normal) both; }
+
+/* ── Scrollbar Stili ─────────────────────────────────────── */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: var(--clr-border);
+  border-radius: var(--radius-full);
 }

@@ -1,0 +1,106 @@
+/* ============================================================
+   UI Bileşen Stilleri — StatusBar, BottomBar
+   ============================================================ */
+
+/* ── StatusBar ───────────────────────────────────────────────── */
+.status-bar {
+  position: absolute;
+  top: var(--space-4);
+  left: var(--space-4);
+  z-index: var(--z-hud);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-full);
+  font-size: 12px;
+  font-weight: 500;
+  animation: fade-in var(--transition-normal) both;
+}
+
+.status-bar__item {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.status-bar__label {
+  color: var(--clr-text-muted);
+  white-space: nowrap;
+}
+
+.status-bar__value {
+  color: var(--clr-text);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.status-bar__unit {
+  color: var(--clr-text-faint);
+  font-size: 11px;
+}
+
+.status-bar__divider {
+  width: 1px;
+  height: 14px;
+  background: var(--clr-border);
+  margin: 0 var(--space-1);
+}
+
+/* ── BottomBar ───────────────────────────────────────────────── */
+.bottom-bar__inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  gap: var(--space-2);
+}
+
+.bottom-bar__btn {
+  flex: 1;
+  flex-direction: column;
+  gap: 4px;
+  height: auto;
+  min-height: var(--touch-target);
+  padding: var(--space-2) var(--space-1);
+  background: transparent !important;
+  border: 1px solid transparent !important;
+  border-radius: var(--radius-md) !important;
+  color: var(--clr-text-faint);
+  font-size: 11px;
+  font-weight: 500;
+  transition: all var(--transition-fast);
+}
+
+.bottom-bar__btn span {
+  line-height: 1;
+}
+
+.bottom-bar__btn svg {
+  flex-shrink: 0;
+}
+
+.bottom-bar__btn:hover:not(:disabled) {
+  background: var(--clr-surface-2) !important;
+  border-color: var(--clr-border) !important;
+  color: var(--clr-text-muted);
+}
+
+.bottom-bar__btn:active:not(:disabled) {
+  transform: scale(0.96);
+}
+
+.bottom-bar__btn--active {
+  background: var(--clr-primary-glow) !important;
+  border-color: var(--clr-primary) !important;
+  color: var(--clr-primary) !important;
+}
+
+.bottom-bar__btn--active svg {
+  filter: drop-shadow(0 0 4px var(--clr-primary));
+}
+
+.bottom-bar__btn--disabled,
+.bottom-bar__btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}

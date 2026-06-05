@@ -1,0 +1,98 @@
+/* MapView bileşenine özgü stiller */
+
+.map-wrapper {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+/* MapLibre canvas tam doldur */
+.map-wrapper .maplibregl-canvas-container,
+.map-wrapper .maplibregl-canvas {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+/* Navigasyon kontrolü stili */
+.map-wrapper .maplibregl-ctrl-group {
+  background: rgba(17, 24, 39, 0.90) !important;
+  border: 1px solid var(--clr-border) !important;
+  border-radius: var(--radius-md) !important;
+  box-shadow: var(--shadow-md) !important;
+  overflow: hidden;
+}
+
+.map-wrapper .maplibregl-ctrl-group button {
+  background: transparent !important;
+  border: none !important;
+}
+
+.map-wrapper .maplibregl-ctrl-group button .maplibregl-ctrl-icon {
+  filter: invert(0.7) !important;
+}
+
+.map-wrapper .maplibregl-ctrl-group button:hover .maplibregl-ctrl-icon {
+  filter: invert(1) !important;
+}
+
+/* ── Yükleniyor ─────────────────────────────────────────────── */
+.map-loading {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-4);
+  background: var(--clr-bg);
+  color: var(--clr-text-muted);
+  font-size: 14px;
+  z-index: var(--z-hud);
+}
+
+.map-loading__spinner {
+  width: 36px;
+  height: 36px;
+  border: 3px solid var(--clr-border);
+  border-top-color: var(--clr-primary);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+/* ── GPS Butonu ─────────────────────────────────────────────── */
+.map-btn-gps {
+  position: absolute;
+  bottom: calc(var(--touch-target) + var(--space-6) + env(safe-area-inset-bottom, 0px));
+  right: var(--space-4);
+  background: rgba(17, 24, 39, 0.92) !important;
+  border: 1px solid var(--clr-border) !important;
+  color: var(--clr-text-muted);
+  box-shadow: var(--shadow-md);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  transition: all var(--transition-fast);
+  z-index: var(--z-hud);
+}
+
+.map-btn-gps:hover {
+  border-color: var(--clr-primary) !important;
+  color: var(--clr-primary);
+  box-shadow: var(--shadow-glow) !important;
+  transform: translateY(-2px);
+}
+
+.map-btn-gps--active {
+  background: rgba(14, 165, 233, 0.15) !important;
+  border-color: var(--clr-primary) !important;
+  color: var(--clr-primary) !important;
+  box-shadow: var(--shadow-glow) !important;
+}
+
+.map-btn-gps--searching {
+  color: var(--clr-text-faint);
+}
+
+.map-btn-gps--searching svg {
+  animation: spin 2s linear infinite;
+}
