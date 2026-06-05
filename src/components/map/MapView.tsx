@@ -455,6 +455,8 @@ export function MapView({
       zoom: EDREMIT_ZOOM,
       minZoom: 6,
       maxZoom: 18,
+      // @ts-ignore
+      projection: { type: 'globe' } as any, // Küresel dünya projeksiyonu (WebGL rüzgar için ideal)
       attributionControl: { compact: true },
       pitchWithRotate: false,
     });
@@ -571,11 +573,11 @@ export function MapView({
         // Yeni maplibre-wind-gl katmanı
         const wind = new MaplibreWindGL('wind-layer', {
           data: '/wind.json',
-          particles: 80000,
-          speed: 1.2,
-          opacity: 0.6,
-          // Rüzgar hızı aralığı
-          speedRange: [0, 40]
+          particles: 300000, // Zoom yapıldığında görünmesi için ciddi oranda artırıldı
+          speed: 3.0, // Daha hızlı akış
+          opacity: 1.0, // Daha parlak
+          maxAge: 30, // Daha uzun kuyruklar
+          color: [0.0, 1.0, 1.0] // Sabit parlak mavi (Görünürlük testi için)
         });
         
         map.addLayer(wind);
