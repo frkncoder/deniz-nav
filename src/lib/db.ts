@@ -19,6 +19,8 @@ export interface WeatherData {
     time: string[];
     windspeed_10m: number[];
     winddirection_10m: number[];
+    precipitation?: number[];
+    weather_code?: number[];
     wave_height?: number[];
     sea_surface_temperature?: number[];
   };

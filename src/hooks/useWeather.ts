@@ -93,14 +93,17 @@ export function useWeather() {
         .first();
       if (cached && Math.abs(cached.lat - lat) < 0.1 && Math.abs(cached.lng - lng) < 0.1) {
         const d = cached.data;
-        // Cache'den doldur
-        setState(prev => ({
-          ...prev,
-          current: parseCurrentWeather(d),
-          lastFetch: cached.fetchedAt,
-          error: null,
-        }));
-        return;
+        // Eğer eski cache ise (precipitation yoksa), yeniden çekmek için cache'i yoksay
+        if (d?.hourly?.precipitation) {
+          setState(prev => ({
+            ...prev,
+            current: parseCurrentWeather(d),
+            forecast: parseForecast(d),
+            lastFetch: cached.fetchedAt,
+            error: null,
+          }));
+          return;
+        }
       }
     } catch {
       // Cache okuma başarısız, devam et

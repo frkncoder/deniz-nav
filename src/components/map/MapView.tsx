@@ -603,7 +603,7 @@ export function MapView({
             // Yeni maplibre-wind-gl katmanı (Partiküller)
             const wind = new MaplibreWindGL('wind-layer', {
               data: '/wind.json', // veya direkt data objesi
-              particles: 150000, 
+              particles: 800000, // Zoom-in durumunda görünmesi için çok yüksek
               speed: 2.5, 
               opacity: 0.9, 
               maxAge: 30, 
