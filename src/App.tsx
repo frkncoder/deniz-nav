@@ -11,6 +11,7 @@ import { usePWA } from './hooks/usePWA';
 import { useCompass } from './hooks/useCompass';
 import { useNavigation } from './hooks/useNavigation';
 import { useWeather } from './hooks/useWeather';
+import { WindLayer } from './components/weather/WindLayer';
 import './components/ui/ui.css';
 import './App.css';
 
@@ -187,6 +188,13 @@ export default function App() {
           </button>
         </div>
       )}
+
+      {/* Rüzgar Animasyonu Overlay */}
+      <WindLayer 
+        windSpeedKnots={weather.current?.wind.speedKnots ?? null} 
+        windDirectionDeg={weather.current?.wind.directionDeg ?? null} 
+        isActive={isWeatherOpen} 
+      />
 
       {/* Demir Paneli */}
       <AnchorPanel
