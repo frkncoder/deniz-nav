@@ -60,6 +60,19 @@ export interface MapLayers {
   ais: boolean;            // AIS gemileri (Faz 5)
 }
 
+/** AIS Hedefi (Gemi) */
+export interface AISTarget {
+  mmsi: number;
+  name: string;
+  type: 'Passenger' | 'Cargo' | 'Fishing' | 'Sailing' | 'Pleasure' | 'Unknown';
+  lat: number;
+  lng: number;
+  speed: number;           // knots
+  course: number;          // derece (0-360, ground course)
+  heading: number;         // derece (0-360, true heading)
+  lastUpdated: number;     // timestamp ms
+}
+
 /** Harita görünüm durumu */
 export interface MapViewState {
   longitude: number;

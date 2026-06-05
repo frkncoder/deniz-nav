@@ -295,6 +295,87 @@ function updateNavigationData(
   }
 }
 
+// ── AIS Katmanları ──────────────────────────────────────────
+const NAV_AIS_SOURCE = 'nav-ais';
+
+function addAISLayers(map: maplibregl.Map) {
+  if (!map.getSource(NAV_AIS_SOURCE)) {
+    map.addSource(NAV_AIS_SOURCE, {
+      type: 'geojson',
+      data: { type: 'FeatureCollection', features: [] }
+    });
+
+    // Basit bir gemi ikonu yükle (Eğer yoksa)
+    if (!map.hasImage('vessel-icon')) {
+      const vesselSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+        <path d="M12 2L20 20L12 17L4 20L12 2Z" fill="#10b981" stroke="#ffffff" stroke-width="1.5" />
+      </svg>`;
+      const img = new Image();
+      img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(vesselSvg);
+      img.onload = () => {
+        if (!map.hasImage('vessel-icon')) {
+          map.addImage('vessel-icon', img);
+        }
+      };
+    }
+
+    map.addLayer({
+      id: 'nav-ais-layer',
+      type: 'symbol',
+      source: NAV_AIS_SOURCE,
+      layout: {
+        'icon-image': 'vessel-icon',
+        'icon-allow-overlap': true,
+        'icon-ignore-placement': true,
+        'icon-rotate': ['get', 'heading'],
+        'icon-rotation-alignment': 'map',
+        'icon-pitch-alignment': 'map',
+        'icon-size': 1.2,
+        'text-field': ['get', 'name'],
+        'text-font': ['Open Sans Bold', 'Arial Unicode MS Bold'],
+        'text-size': 11,
+        'text-offset': [0, 1.5],
+        'text-anchor': 'top',
+        'text-pitch-alignment': 'viewport'
+      },
+      paint: {
+        'text-color': '#10b981',
+        'text-halo-color': '#000000',
+        'text-halo-width': 1.5
+      }
+    });
+
+    // İmleç efekti
+    map.on('mouseenter', 'nav-ais-layer', () => {
+      map.getCanvas().style.cursor = 'pointer';
+    });
+    map.on('mouseleave', 'nav-ais-layer', () => {
+      map.getCanvas().style.cursor = '';
+    });
+  }
+}
+
+function updateAISData(map: maplibregl.Map, targets: import('../../types').AISTarget[]) {
+  const source = map.getSource(NAV_AIS_SOURCE) as maplibregl.GeoJSONSource | undefined;
+  if (source) {
+    source.setData({
+      type: 'FeatureCollection',
+      features: targets.map(t => ({
+        type: 'Feature',
+        geometry: { type: 'Point', coordinates: [t.lng, t.lat] },
+        properties: { 
+          id: t.mmsi,
+          name: t.name,
+          heading: t.heading,
+          speed: t.speed,
+          course: t.course,
+          type: t.type
+        }
+      }))
+    });
+  }
+}
+
 function updateGPSPosition(map: maplibregl.Map, pos: GPSPosition) {
   const source = map.getSource(GPS_SOURCE_ID) as maplibregl.GeoJSONSource | undefined;
   if (!source) return;
@@ -318,8 +399,10 @@ interface MapViewProps {
   anchorPosition?: GPSPosition | null;
   activeRoute?: import('../../types').Route | null;
   draftRoutePoints?: import('../../types').LatLng[];
+  aisTargets?: import('../../types').AISTarget[];
   onViewStateChange?: (vs: MapViewState) => void;
   onMapClick?: (lat: number, lng: number) => void;
+  onVesselClick?: (target: import('../../types').AISTarget) => void;
 }
 
 // ── Ana Bileşen ───────────────────────────────────────────
@@ -331,8 +414,10 @@ export function MapView({
   anchorPosition: _anchorPosition = null,
   activeRoute: _activeRoute = null,
   draftRoutePoints: _draftRoutePoints = [],
+  aisTargets: _aisTargets = [],
   onViewStateChange,
   onMapClick,
+  onVesselClick,
 }: MapViewProps) {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
@@ -373,11 +458,33 @@ export function MapView({
     map.on('load', () => {
       addGPSLayers(map);
       addNavigationLayers(map);
+      addAISLayers(map);
       if (isSeamapVisible) addSeamarkOverlay(map);
       setIsLoaded(true);
     });
 
+    map.on('click', 'nav-ais-layer', (e) => {
+      if (onVesselClick && e.features && e.features.length > 0) {
+        const p = e.features[0].properties;
+        onVesselClick({
+          mmsi: p.id,
+          name: p.name,
+          heading: p.heading,
+          speed: p.speed,
+          course: p.course,
+          type: p.type,
+          lat: (e.features[0].geometry as any).coordinates[1],
+          lng: (e.features[0].geometry as any).coordinates[0],
+          lastUpdated: Date.now()
+        });
+      }
+    });
+
     map.on('click', (e) => {
+      // Eğer ais layer'a tıklandıysa haritaya tıklanmasını es geç (propagation)
+      const features = map.queryRenderedFeatures(e.point, { layers: ['nav-ais-layer'] });
+      if (features.length > 0) return;
+
       if (onMapClick) {
         onMapClick(e.lngLat.lat, e.lngLat.lng);
       }
@@ -427,6 +534,13 @@ export function MapView({
     if (!map || !isLoaded) return;
     updateNavigationData(map, _waypoints, _anchorPosition, _activeRoute, _draftRoutePoints);
   }, [_waypoints, _anchorPosition, _activeRoute, _draftRoutePoints, isLoaded]);
+
+  // AIS verisi güncellemesi
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !isLoaded) return;
+    updateAISData(map, _aisTargets);
+  }, [_aisTargets, isLoaded]);
 
   // OpenSeaMap katmanı toggle
   useEffect(() => {

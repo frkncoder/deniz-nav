@@ -11,7 +11,10 @@ import { usePWA } from './hooks/usePWA';
 import { useCompass } from './hooks/useCompass';
 import { useNavigation } from './hooks/useNavigation';
 import { useWeather } from './hooks/useWeather';
+import { useAIS } from './hooks/useAIS';
 import { WindLayer } from './components/weather/WindLayer';
+import { VesselPanel } from './components/ui/VesselPanel';
+import type { AISTarget } from './types';
 import './components/ui/ui.css';
 import './App.css';
 
@@ -26,11 +29,13 @@ export default function App() {
   const compass       = useCompass();
   const nav           = useNavigation();
   const weather       = useWeather();
+  const ais           = useAIS();
 
   const [isSeamapVisible, setSeamapVisible] = useState(true);
   const [isRouteMode,     setRouteMode]     = useState(false);
   const [isWeatherOpen,   setWeatherOpen]   = useState(false);
   const [draftRoutePoints, setDraftRoutePoints] = useState<import('./types').LatLng[]>([]);
+  const [selectedVessel, setSelectedVessel] = useState<AISTarget | null>(null);
 
   // Waypoint'leri başlangıçta yükle
   useEffect(() => {
@@ -166,7 +171,9 @@ export default function App() {
         anchorPosition={nav.anchorPosition}
         activeRoute={nav.activeRoute}
         draftRoutePoints={draftRoutePoints}
+        aisTargets={ais.targets}
         onMapClick={handleMapClick}
+        onVesselClick={(v) => setSelectedVessel(v)}
       />
 
       {/* Rota Çizim Kontrolleri */}
@@ -203,6 +210,12 @@ export default function App() {
         currentPosition={gps.position}
         onDropAnchor={handleDropAnchor}
         onLiftAnchor={nav.liftAnchor}
+      />
+
+      {/* Gemi Detay Paneli */}
+      <VesselPanel
+        vessel={selectedVessel}
+        onClose={() => setSelectedVessel(null)}
       />
 
       {/* Hava Durumu Paneli */}
