@@ -10,6 +10,21 @@ precacheAndRoute(self.__WB_MANIFEST);
 cleanupOutdatedCaches();
 // ── Cache Stratejileri ────────────────────────────────────────
 /**
+ * Stadia Maps vektör tile'ları ve stil dosyaları — CacheFirst
+ * İlk yükleme sonrası offline çalışır.
+ */
+registerRoute(({ url }) => url.hostname === 'tiles.stadiamaps.com' ||
+    url.hostname === 'stamen-tiles.a.ssl.fastly.net', new CacheFirst({
+    cacheName: 'stadia-tiles-v1',
+    plugins: [
+        new CacheableResponsePlugin({ statuses: [200] }),
+        new ExpirationPlugin({
+            maxEntries: 3000,
+            maxAgeSeconds: 60 * 60 * 24 * 30, // 30 gün
+        }),
+    ],
+}));
+/**
  * Protomaps / PMTiles vektör tile'ları — CacheFirst
  * Tile'lar değişmez, sonsuza kadar cache'de kalabilir.
  */

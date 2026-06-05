@@ -42,8 +42,8 @@ export default defineConfig({
         ],
       },
       devOptions: {
-        // Dev modunda SW aktif (test için)
-        enabled: true,
+        // Dev modunda SW kapalı — localhost'ta MIME type hatalarına yol açar
+        enabled: false,
         type: 'module',
       },
     }),

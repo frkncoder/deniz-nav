@@ -22,3 +22,11 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Environment (API keys — commit etme!)
+.env
+.env.local
+.env.*.local
+
+# PWA dev dist
+dev-dist/

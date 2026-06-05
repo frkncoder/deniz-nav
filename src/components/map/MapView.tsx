@@ -5,110 +5,32 @@ import 'maplibre-gl/dist/maplibre-gl.css';
 import type { GPSPosition, MapViewState } from '../../types';
 import './MapView.css';
 
-// ── Sabitler ─────────────────────────────────────────────────
+// ── Harita Stil Kaynağları ───────────────────────────────────
+
+const STADIA_API_KEY = import.meta.env.VITE_STADIA_API_KEY as string;
+
+/**
+ * Stadia Maps alidade_smooth_dark — karanlık, temiz, deniz navigasyonu için ideal.
+ * API key gerektirir (stadia maps ücretsiz katman).
+ */
+const STADIA_STYLE_URL = `https://tiles.stadiamaps.com/styles/alidade_smooth_dark.json?api_key=${STADIA_API_KEY}`;
+
+/**
+ * Minimal offline fallback stil — sadece renk, tile gerektirmez.
+ * Internet yokken ve cache henüz dolmamışken görünür.
+ */
+const OFFLINE_FALLBACK_STYLE: maplibregl.StyleSpecification = {
+  version: 8,
+  sources: {},
+  layers: [
+    { id: 'bg', type: 'background', paint: { 'background-color': '#0c2340' } },
+  ],
+};
+
+// ── Coğrafi Sabitler ─────────────────────────────────────────
 /** Edremit Körfezi merkezi */
 const EDREMIT_CENTER: [number, number] = [26.87, 39.55];
 const EDREMIT_ZOOM = 11;
-
-// ── Protomaps Deniz Temalı Dark Stil ─────────────────────────
-// Tip güvenliği için maplibregl.StyleSpecification uyumlu nesne
-const DARK_STYLE: maplibregl.StyleSpecification = {
-  version: 8,
-  glyphs: 'https://protomaps.github.io/basemaps-assets/fonts/{fontstack}/{range}.pbf',
-  sprite: 'https://protomaps.github.io/basemaps-assets/sprites/v4/dark',
-  sources: {
-    protomaps: {
-      type: 'vector',
-      url: 'pmtiles://https://build.protomaps.com/20250601.pmtiles',
-      attribution: '© <a href="https://openstreetmap.org">OpenStreetMap</a>',
-    },
-  },
-  layers: [
-    // Okyanuslar / Deniz
-    {
-      id: 'water',
-      type: 'fill',
-      source: 'protomaps',
-      'source-layer': 'water',
-      paint: { 'fill-color': '#0c2340' },
-    },
-    // Kara
-    {
-      id: 'earth',
-      type: 'fill',
-      source: 'protomaps',
-      'source-layer': 'earth',
-      paint: { 'fill-color': '#162032' },
-    },
-    // Yollar (küçük)
-    {
-      id: 'roads_minor',
-      type: 'line',
-      source: 'protomaps',
-      'source-layer': 'roads',
-      paint: {
-        'line-color': '#1e2d45',
-        'line-width': ['interpolate', ['linear'], ['zoom'], 10, 0.5, 16, 2],
-      },
-    } as maplibregl.LineLayerSpecification,
-    // Yollar (ana)
-    {
-      id: 'roads_major',
-      type: 'line',
-      source: 'protomaps',
-      'source-layer': 'roads',
-      paint: {
-        'line-color': '#243654',
-        'line-width': ['interpolate', ['linear'], ['zoom'], 8, 1, 16, 4],
-      },
-    } as maplibregl.LineLayerSpecification,
-    // Binalar
-    {
-      id: 'buildings',
-      type: 'fill',
-      source: 'protomaps',
-      'source-layer': 'buildings',
-      minzoom: 14,
-      paint: { 'fill-color': '#1a2c42', 'fill-opacity': 0.8 },
-    },
-    // Yer adları
-    {
-      id: 'place_labels',
-      type: 'symbol',
-      source: 'protomaps',
-      'source-layer': 'places',
-      layout: {
-        'text-field': ['coalesce', ['get', 'name:tr'], ['get', 'name']],
-        'text-font': ['Noto Sans Regular'],
-        'text-size': ['interpolate', ['linear'], ['zoom'], 8, 11, 14, 15],
-        'text-anchor': 'center',
-        'text-max-width': 8,
-      },
-      paint: {
-        'text-color': '#94a3b8',
-        'text-halo-color': '#0a0f1a',
-        'text-halo-width': 2,
-      },
-    } as maplibregl.SymbolLayerSpecification,
-    // Deniz adları
-    {
-      id: 'water_labels',
-      type: 'symbol',
-      source: 'protomaps',
-      'source-layer': 'water',
-      layout: {
-        'text-field': ['coalesce', ['get', 'name:tr'], ['get', 'name']],
-        'text-font': ['Noto Sans Italic'],
-        'text-size': ['interpolate', ['linear'], ['zoom'], 8, 10, 14, 14],
-      },
-      paint: {
-        'text-color': '#1e5a8a',
-        'text-halo-color': '#0c2340',
-        'text-halo-width': 1.5,
-      },
-    } as maplibregl.SymbolLayerSpecification,
-  ],
-};
 
 // ── OpenSeaMap Raster Overlay ─────────────────────────────────
 const SEAMARK_SOURCE_ID = 'openseamap';
@@ -221,9 +143,12 @@ export function MapView({
   useEffect(() => {
     if (!mapContainerRef.current || mapRef.current) return;
 
+    // Online ise Stadia Maps dark, offline ise minimal fallback
+    const styleUrl = navigator.onLine ? STADIA_STYLE_URL : OFFLINE_FALLBACK_STYLE;
+
     const map = new maplibregl.Map({
       container: mapContainerRef.current,
-      style: DARK_STYLE,
+      style: styleUrl,
       center: EDREMIT_CENTER,
       zoom: EDREMIT_ZOOM,
       minZoom: 6,
