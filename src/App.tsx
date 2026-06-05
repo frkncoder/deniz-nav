@@ -4,12 +4,14 @@ import { StatusBar } from './components/ui/StatusBar';
 import { BottomBar } from './components/ui/BottomBar';
 import { useGPS } from './hooks/useGPS';
 import { useOffline } from './hooks/useOffline';
+import { usePWA } from './hooks/usePWA';
 import './components/ui/ui.css';
 import './App.css';
 
 export default function App() {
   const gps = useGPS();
   const { status: connectionStatus } = useOffline();
+  const pwa = usePWA();
 
   const [isSeamapVisible, setSeamapVisible] = useState(true);
 
@@ -18,9 +20,7 @@ export default function App() {
       gps.stopTracking();
     } else {
       const allowed = await gps.requestPermission();
-      if (allowed) {
-        gps.startTracking();
-      }
+      if (allowed) gps.startTracking();
     }
   }, [gps]);
 
@@ -46,6 +46,22 @@ export default function App() {
             <line x1="12" y1="16" x2="12.01" y2="16" />
           </svg>
           {gps.error}
+        </div>
+      )}
+
+      {/* PWA Kurulum Banner'ı */}
+      {pwa.isInstallable && (
+        <div className="pwa-install-banner" role="banner">
+          <div className="pwa-install-banner__content">
+            <span>⚓ Ana ekrana ekle — offline çalışsın</span>
+            <button
+              id="btn-pwa-install"
+              className="btn btn-primary pwa-install-banner__btn"
+              onClick={pwa.promptInstall}
+            >
+              Yükle
+            </button>
+          </div>
         </div>
       )}
 
