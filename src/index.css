@@ -127,12 +127,18 @@ h1, h2, h3, h4 {
 }
 
 /* ── Harita Konteyner ────────────────────────────────────── */
-.map-container {
+/* map-wrapper: App layout içinde kalan alanı doldurur */
+.map-wrapper {
   position: relative;
-  width: 100%;
   flex: 1;
+  min-height: 0;          /* flex child'ın shrink olabilmesi için */
   overflow: hidden;
-  background: var(--clr-bg);
+}
+
+/* map-container: MapLibre'nin mount noktası — mutlaka boyut olmalı */
+.map-container {
+  position: absolute;
+  inset: 0;
 }
 
 /* MapLibre canvas tam ekran */

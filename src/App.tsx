@@ -29,7 +29,10 @@ export default function App() {
   }, []);
 
   return (
-    <main className="app-layout">
+    <main
+      className="app-layout"
+      style={{ position: 'fixed', inset: 0, display: 'flex', flexDirection: 'column', overflow: 'hidden', background: '#0a0f1a' }}
+    >
       {/* HUD — Sol üst durum çubuğu */}
       <StatusBar
         connectionStatus={connectionStatus}

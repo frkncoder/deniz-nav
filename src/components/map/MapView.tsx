@@ -7,13 +7,7 @@ import './MapView.css';
 
 // ── Harita Stil Kaynağları ───────────────────────────────────
 
-const STADIA_API_KEY = import.meta.env.VITE_STADIA_API_KEY as string;
-
-/**
- * Stadia Maps alidade_smooth_dark — karanlık, temiz, deniz navigasyonu için ideal.
- * API key gerektirir (stadia maps ücretsiz katman).
- */
-const STADIA_STYLE_URL = `https://tiles.stadiamaps.com/styles/alidade_smooth_dark.json?api_key=${STADIA_API_KEY}`;
+const STADIA_STYLE_URL = 'https://tiles.stadiamaps.com/styles/alidade_smooth_dark.json?api_key=2eacff3d-bd34-4a38-a41a-f55f0927ce7a';
 
 /**
  * Minimal offline fallback stil — sadece renk, tile gerektirmez.
@@ -143,7 +137,6 @@ export function MapView({
   useEffect(() => {
     if (!mapContainerRef.current || mapRef.current) return;
 
-    // Online ise Stadia Maps dark, offline ise minimal fallback
     const styleUrl = navigator.onLine ? STADIA_STYLE_URL : OFFLINE_FALLBACK_STYLE;
 
     const map = new maplibregl.Map({
@@ -232,8 +225,15 @@ export function MapView({
   }, [gpsPosition]);
 
   return (
-    <div className="map-wrapper">
-      <div ref={mapContainerRef} className="map-container" />
+    <div
+      className="map-wrapper"
+      style={{ position: 'relative', width: '100%', height: '100%', flex: 1, minHeight: 0 }}
+    >
+      <div
+        ref={mapContainerRef}
+        className="map-container"
+        style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }}
+      />
 
       {!isLoaded && (
         <div className="map-loading" aria-label="Harita yükleniyor">
