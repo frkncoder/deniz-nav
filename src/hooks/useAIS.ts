@@ -1,123 +1,50 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import type { AISTarget } from '../types';
 
-const API_KEY = import.meta.env.VITE_AISSTREAM_API_KEY;
-
-// Tüm Türkiye'yi (Ege, Akdeniz, Karadeniz) kapsayan bounding box:
-// [[[Güney-Batı Enlem, Güney-Batı Boylam], [Kuzey-Doğu Enlem, Kuzey-Doğu Boylam]]]
-const BOUNDING_BOX = [[[35.8, 25.6], [42.2, 44.8]]];
-
-function parseShipType(typeCode?: number): AISTarget['type'] {
-  if (!typeCode) return 'Unknown';
-  if (typeCode >= 60 && typeCode <= 69) return 'Passenger';
-  if (typeCode >= 70 && typeCode <= 79) return 'Cargo';
-  if (typeCode === 30) return 'Fishing';
-  if (typeCode === 36) return 'Sailing';
-  if (typeCode === 37) return 'Pleasure';
-  return 'Unknown';
-}
+// Edremit Körfezi etrafında örnek gemiler
+const INITIAL_VESSELS: AISTarget[] = [
+  { mmsi: 271041000, name: 'GELIBOLU', type: 'Passenger', lat: 39.54, lng: 26.85, speed: 12.5, course: 45, heading: 45, lastUpdated: Date.now() },
+  { mmsi: 271042000, name: 'KAPTAN ALİ', type: 'Cargo', lat: 39.56, lng: 26.90, speed: 8.0, course: 220, heading: 220, lastUpdated: Date.now() },
+  { mmsi: 271043000, name: 'BEYZA', type: 'Sailing', lat: 39.52, lng: 26.88, speed: 4.5, course: 320, heading: 320, lastUpdated: Date.now() },
+  { mmsi: 271044000, name: 'YAKAMOZ', type: 'Fishing', lat: 39.58, lng: 26.83, speed: 2.1, course: 90, heading: 90, lastUpdated: Date.now() },
+  { mmsi: 271045000, name: 'EGE EXPRESS', type: 'Passenger', lat: 39.55, lng: 26.80, speed: 18.2, course: 110, heading: 110, lastUpdated: Date.now() }
+];
 
 export function useAIS() {
-  // Gemileri MMSI numarasına göre saklamak için Record kullanıyoruz.
-  const [targets, setTargets] = useState<Record<number, AISTarget>>({});
-  const [isActive, setIsActive] = useState(true);
-  const wsRef = useRef<WebSocket | null>(null);
+  const [targets, setTargets] = useState<AISTarget[]>(INITIAL_VESSELS);
+  const [isActive, setIsActive] = useState(true); // Varsayılan olarak açık başlasın
 
   useEffect(() => {
-    if (!isActive || !API_KEY) return;
+    if (!isActive) return;
 
-    const connectWebSocket = () => {
-      const ws = new WebSocket("wss://stream.aisstream.io/v0/stream");
-      wsRef.current = ws;
+    // Her saniye gemileri simüle ederek hareket ettir
+    const interval = setInterval(() => {
+      setTargets(prev => prev.map(v => {
+        // 1 knot = 1 deniz mili / saat
+        // 1 saniyedeki mesafe (nm) = speed / 3600
+        const distanceNm = v.speed / 3600;
+        
+        // 1 derece enlem = 60 nm
+        const latChange = (distanceNm * Math.cos(v.course * Math.PI / 180)) / 60;
+        const lngChange = (distanceNm * Math.sin(v.course * Math.PI / 180)) / (60 * Math.cos(v.lat * Math.PI / 180));
+        
+        // Hafif bir kavis (rotasyon) ekleyelim ki daha gerçekçi dursun (bazı gemiler için)
+        const courseWobble = (Math.random() - 0.5) * 0.5; // -0.25 ile 0.25 arası derece değişimi
+        const newCourse = (v.course + courseWobble + 360) % 360;
 
-      ws.onopen = () => {
-        console.log("AIS WebSocket bağlandı!");
-        const subscriptionMessage = {
-          APIKey: API_KEY,
-          BoundingBoxes: BOUNDING_BOX,
-          FilterMessageTypes: ["PositionReport"]
+        return {
+          ...v,
+          lat: v.lat + latChange,
+          lng: v.lng + lngChange,
+          course: newCourse,
+          heading: newCourse, // Simülasyonda heading ve course aynı kabul edildi
+          lastUpdated: Date.now()
         };
-        ws.send(JSON.stringify(subscriptionMessage));
-      };
+      }));
+    }, 1000);
 
-      ws.onmessage = (event) => {
-        try {
-          const aisMessage = JSON.parse(event.data);
-          
-          if (aisMessage.MessageType === "PositionReport") {
-            const report = aisMessage.Message.PositionReport;
-            const meta = aisMessage.MetaData || {};
-            
-            const mmsi = report.UserID || meta.MMSI;
-            if (!mmsi) return;
-
-            setTargets(prev => {
-              const existingName = prev[mmsi]?.name;
-              const newName = meta.ShipName ? meta.ShipName.trim() : null;
-              const finalName = (newName && newName !== '') ? newName : (existingName || 'Bilinmiyor');
-
-              return {
-                ...prev,
-                [mmsi]: {
-                  mmsi: mmsi,
-                  name: finalName,
-                  type: parseShipType(meta.ShipType),
-                  lat: report.Latitude,
-                  lng: report.Longitude,
-                  speed: report.Sog || 0,
-                  course: report.Cog || 0,
-                  // 511 heading verisi yok demektir, bu durumda rotayı (COG) baş (Heading) olarak varsayıyoruz.
-                  heading: report.TrueHeading === 511 ? (report.Cog || 0) : report.TrueHeading,
-                  lastUpdated: Date.now()
-                }
-              };
-            });
-          }
-        } catch (err) {
-          console.error("AIS Parse Hatası:", err);
-        }
-      };
-
-      ws.onclose = () => {
-        console.log("AIS WebSocket kapandı. Yeniden bağlanılıyor...");
-        setTimeout(() => {
-          if (wsRef.current) connectWebSocket();
-        }, 5000);
-      };
-    };
-
-    connectWebSocket();
-
-    // Çöp temizleme: 10 dakikadan uzun süredir sinyal alınamayan gemileri sil
-    const cleanupInterval = setInterval(() => {
-      const now = Date.now();
-      setTargets(prev => {
-        const next = { ...prev };
-        let changed = false;
-        Object.keys(next).forEach(key => {
-          const mmsi = Number(key);
-          if (now - next[mmsi].lastUpdated > 10 * 60 * 1000) {
-            delete next[mmsi];
-            changed = true;
-          }
-        });
-        return changed ? next : prev;
-      });
-    }, 60000);
-
-    return () => {
-      clearInterval(cleanupInterval);
-      if (wsRef.current) {
-        wsRef.current.onclose = null; // manuel kapatıldığında tekrar bağlanmasını engelle
-        wsRef.current.close();
-        wsRef.current = null;
-      }
-    };
+    return () => clearInterval(interval);
   }, [isActive]);
 
-  return { 
-    targets: Object.values(targets), 
-    isActive, 
-    setIsActive 
-  };
+  return { targets, isActive, setIsActive };
 }
